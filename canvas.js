@@ -28,7 +28,7 @@ function graph() {
 
 
 // pre-genesis soup
-class Rectange {
+class Rectangle {
     constructor(x, y, width, height, color, value) {
         this.x = x;
         this.y = y;
@@ -40,14 +40,14 @@ class Rectange {
 
     draw( h = this.x, v = this.y, wide = this.width, high = this.height, color = this.color) {
         if(h != this.x) {
-            this.x = h;
-        }
+            this.x = h;                         // this method of rectanlge class is responsible for
+        }                                       // rendering the rectangles on the canvas
 
         if( v != this.y ) {
             this.y = v;
         }
 
-        if( wide != width) {
+        if( wide != this.width) {
             this.width = wide;
         }
 
@@ -58,11 +58,25 @@ class Rectange {
         if(color != this.color) {
             this.color = color;
         }
-        console.log("The draw function was called and here are the details");
-        console.log(this.x + " " + this.y + " " + this.width + " " + this.height + " " + this.color );
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
     
+    }
+    update(destination, direction) {
+        console.log("the update function was called");
+        if(direction == "forward") {
+          if(this.x < destination ) {   // the update method is responsible for the swapping animation
+            this.x += 10;
+          }
+      
+       }
+     
+      if(direction == "backward") {
+            if(this.x > destination) {
+              this.x -= 10;
+            }
+       }
+        this.draw(this.x, this.y, this.width, this.height, this.color);
     }
 
     
@@ -72,7 +86,7 @@ class Rectange {
 var rectArray = [];
 var color = "red";
 var x = 50, y , height = 10, width = 50;
-var values = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+var values = [10, 5, 15, 20, 30, 25, 35, 40, 45, 50];
 
 // genesis
 
@@ -80,7 +94,7 @@ for(var i=0; i<10; i++) {
     
     height = 10 * values[i];
     y = 550 - height;
-    rectArray.push(new Rectange(x, y, width, height, color, values[i] ));
+    rectArray.push(new Rectangle(x, y, width, height, color, values[i] ));
     rectArray[i].draw(x,y, width, height, color);
     x = x + width + 50;
 }
@@ -88,66 +102,99 @@ graph();
 console.log("-------------------------  the genesis is over ------------------------------------");
 
 
-function grey_out() {
+
+function highlight(i, c) {
+    console.log("the highligh function was called");
     ctx.clearRect(0, 0, innerWidth, innerHeight);
-    console.log("The promise part and greying out");
-    rectArray.forEach(function(rect) {
-        rect.draw(rect.x, rect.y, rect.width, rect.height, "grey");
-    });
-}
 
-var prom_grey = new Promise( (resolve) => {
-    setTimeout(function() {
-        grey_out();
-        resolve();
-    }, 4000);
-    
-});
+    for( var j = 0; j < 10; j++) {
+        rectArray[i].draw(rectArray[i].x, rectArray[i].y, rectArray[i].width, rectArray[i].height, c );
+        rectArray[i + 1].draw(rectArray[i + 1].x, rectArray[i + 1].y, rectArray[i + 1].width, rectArray[i + 1].height, c );
 
-graph();
-
-// redraw function 
-
-function redraw(z, i) {
-    setTimeout(function() {
-        ctx.clearRect(0, 0, innerWidth, innerHeight);
-        for(var z = 0; z < 10; z++) {
-
-            ctx.clearRect(0, 0, innerWidth, innerHeight);
-
-            if(z == i || z == i+1) {
-                rectArray[z].draw(rectArray[z].x, rectArray[z].y, rectArray[z].width, rectArray[z].height, "red");
-            }else {
-                rectArray[z].draw(rectArray[z].x, rectArray[z].y, rectArray[z].width, rectArray[z].height, "grey");
-            }
+        if(j != i && j != i+1) {
+            rectArray[j].draw(rectArray[j].x, rectArray[j].y, rectArray[j].width, rectArray[j].height, "turquoise");
         }
-        graph();
-    }, 5000 * i);
+    }
+    graph();
+
 }
 
-var unsorted = true;
 
-function animate() {
+function promise_hightlight(i, c) {
+    return new Promise( (resolve) => {
+        setTimeout( () => {
+            highlight(i, c);
+            resolve();
+        }, 1000 );
+    } )
+}
+
+// Rectangle swapping function
+function swap(idx, buffer_x1, buffer_x2) {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
     
+    console.log("we are in the swap function");
+    console.log("i is" + idx);
+    console.log(rectArray[idx].x);
+    console.log(rectArray[idx+1].x);
 
-    do {
-        unsorted = false;
-        for(var i=0; i < 1; i++) {
-            for(var t = 0; t < 10; t++ ) {
-                redraw(t, i);
-
-
-
-            }
-            
+    
+    rectArray[idx].update(buffer_x2, "forward");
+    rectArray[idx+1].update(buffer_x1, "backward");
+    debugger;
+    
+    for(var j=0; j<10; j++) {
+        if(j != idx && j != idx+1) {
+            rectArray[j].draw(rectArray[j].x, rectArray[j].y, rectArray[j].width, rectArray[j].height, "turquoise");
+        }
+    }
+    graph();
+    
+    
+    if(rectArray[idx].x < buffer_x2 && rectArray[idx+1].x > buffer_x1) {
+        debugger;
+      var requestId =   window.requestAnimationFrame(()=>swap(idx, buffer_x1, buffer_x2));
         
-        }
-    }while( unsorted );
-
-
+    }else if(rectArray[idx].x >= buffer_x2 && rectArray[idx+1].x <= buffer_x1) {
+        debugger;
+        window.cancelAnimationFrame(requestId);
+    }
 }
 
-prom_grey.then(animate);
+function promise_swap(idx, buffer_x1, buffer_x2) {
+    debugger;
+    return new Promise( (resolve) => {
+        swap(idx, buffer_x1, buffer_x2);
+        debugger;
+        resolve();
+    } )
+}
+
+async function asyncAwait(i) {
+    if(i < 9) {
+        console.log("In the async await function i=================================================================" + i);
+        await promise_hightlight(i, "red");
+        
+        if( rectArray[i].value > rectArray[i+1].value ) {
+            
+            console.log("error");
+            var buffer_x1 = rectArray[i].x;
+            var buffer_x2 = rectArray[i+1].x;
+            debugger;
+            await promise_swap(i, buffer_x1, buffer_x2);
+            debugger;
+            [rectArray[i], rectArray[i+1]] = [rectArray[i+1], rectArray[i]];  // this I am doing because 
+        }                                                   // after swapping rectArray[i+1] will go to rectArray[i]'s place and the 
+        await promise_hightlight(i, "green");               // highlight function will higligh | | |
+                                                            //                                 ^   ^ and that is not what i want.
+        await asyncAwait(i+1);
+    }
+    
+    
+    
+}
+
+asyncAwait(0);
 
 
 

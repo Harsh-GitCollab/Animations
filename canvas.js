@@ -153,7 +153,7 @@ function swap(idx, buffer_x1, buffer_x2) {
     
     if(rectArray[idx].x < buffer_x2 && rectArray[idx+1].x > buffer_x1) {
         debugger;
-      var requestId =   window.requestAnimationFrame(()=>swap(idx, buffer_x1, buffer_x2));
+      var requestId =   window.requestAnimationFrame(swap(idx, buffer_x1, buffer_x2));
         
     }else if(rectArray[idx].x >= buffer_x2 && rectArray[idx+1].x <= buffer_x1) {
         debugger;

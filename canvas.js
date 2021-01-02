@@ -1,15 +1,17 @@
+import Rectangle  from './rectangle.js'
+import {promise_hightlight, swap, promise_swap} from './animate.js'
+
+
+
 // selectors 
 var canvas = document.getElementById("myCanvas");
-
-
-// setting up the canvas
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 // getting the magic brush
-var ctx = canvas.getContext("2d");
+export var ctx = canvas.getContext("2d");
 
-function graph() {
+export function graph() {
     for(var i=0; i <= 18; i++) {
         ctx.beginPath();
         ctx.moveTo(50 * i, 0);
@@ -27,66 +29,12 @@ function graph() {
 }
 
 
-// pre-genesis soup
-class Rectangle {
-    constructor(x, y, width, height, color, value) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.color = color;
-        this.value = value;
-    }
-
-    draw( h = this.x, v = this.y, wide = this.width, high = this.height, color = this.color) {
-        if(h != this.x) {
-            this.x = h;                         // this method of rectanlge class is responsible for
-        }                                       // rendering the rectangles on the canvas
-
-        if( v != this.y ) {
-            this.y = v;
-        }
-
-        if( wide != this.width) {
-            this.width = wide;
-        }
-
-        if( high != this.height) {
-            this.height = high;
-        }
-
-        if(color != this.color) {
-            this.color = color;
-        }
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-    
-    }
-    update(destination, direction) {
-        console.log("the update function was called");
-        if(direction == "forward") {
-          if(this.x < destination ) {   // the update method is responsible for the swapping animation
-            this.x += 10;
-          }
-      
-       }
-     
-      if(direction == "backward") {
-            if(this.x > destination) {
-              this.x -= 10;
-            }
-       }
-        this.draw(this.x, this.y, this.width, this.height, this.color);
-    }
-
-    
-}
 
 
-var rectArray = [];
+export var rectArray = [];
 var color = "red";
 var x = 50, y , height = 10, width = 50;
-var values = [10, 5, 15, 20, 30, 25, 35, 40, 45, 50];
+var values = [10, 10, 15, 20, 30, 25, 35, 40, 45, 50];
 
 // genesis
 
@@ -101,108 +49,83 @@ for(var i=0; i<10; i++) {
 graph();
 console.log("-------------------------  the genesis is over ------------------------------------");
 
+var rectPointer = 0, asyncAwaitRepeatindex = 0, lastIndex = 9, isUnsorted = true;
 
 
-function highlight(i, c) {
-    console.log("the highligh function was called");
-    ctx.clearRect(0, 0, innerWidth, innerHeight);
-
-    for( var j = 0; j < 10; j++) {
-        rectArray[i].draw(rectArray[i].x, rectArray[i].y, rectArray[i].width, rectArray[i].height, c );
-        rectArray[i + 1].draw(rectArray[i + 1].x, rectArray[i + 1].y, rectArray[i + 1].width, rectArray[i + 1].height, c );
-
-        if(j != i && j != i+1) {
-            rectArray[j].draw(rectArray[j].x, rectArray[j].y, rectArray[j].width, rectArray[j].height, "turquoise");
-        }
-    }
-    graph();
-
-}
-
-
-function promise_hightlight(i, c) {
-    return new Promise( (resolve) => {
-        setTimeout( () => {
-            highlight(i, c);
-            resolve();
-        }, 1000 );
-    } )
-}
-
-// Rectangle swapping function
-function swap(idx, buffer_x1, buffer_x2) {
-    ctx.clearRect(0, 0, innerWidth, innerHeight);
+async function animate(rectIndex) {
     
-    console.log("we are in the swap function");
-    console.log("i is" + idx);
-    console.log(rectArray[idx].x);
-    console.log(rectArray[idx+1].x);
-
-    
-    rectArray[idx].update(buffer_x2, "forward");
-    rectArray[idx+1].update(buffer_x1, "backward");
-    debugger;
-    
-    for(var j=0; j<10; j++) {
-        if(j != idx && j != idx+1) {
-            rectArray[j].draw(rectArray[j].x, rectArray[j].y, rectArray[j].width, rectArray[j].height, "turquoise");
-        }
-    }
-    graph();
-    
-    
-    if(rectArray[idx].x < buffer_x2 && rectArray[idx+1].x > buffer_x1) {
-        debugger;
-      var requestId =   window.requestAnimationFrame(swap(idx, buffer_x1, buffer_x2));
-        
-    }else if(rectArray[idx].x >= buffer_x2 && rectArray[idx+1].x <= buffer_x1) {
-        debugger;
-        window.cancelAnimationFrame(requestId);
-    }
-}
-
-function promise_swap(idx, buffer_x1, buffer_x2) {
-    debugger;
-    return new Promise( (resolve) => {
-        swap(idx, buffer_x1, buffer_x2);
-        debugger;
-        resolve();
-    } )
-}
-
-async function asyncAwait(i) {
-    if(i < 9) {
+    if(rectIndex < lastIndex-1) {
         console.log("In the async await function i=================================================================" + i);
-        await promise_hightlight(i, "red");
+        await promise_hightlight(rectIndex, "red");
         
-        if( rectArray[i].value > rectArray[i+1].value ) {
-            
+        if( rectArray[rectIndex].value > rectArray[rectIndex+1].value ) {
+            isUnsorted = true;
+            await promise_hightlight(rectIndex, "red");
             console.log("error");
-            var buffer_x1 = rectArray[i].x;
-            var buffer_x2 = rectArray[i+1].x;
-            debugger;
-            await promise_swap(i, buffer_x1, buffer_x2);
-            debugger;
-            [rectArray[i], rectArray[i+1]] = [rectArray[i+1], rectArray[i]];  // this I am doing because 
-        }                                                   // after swapping rectArray[i+1] will go to rectArray[i]'s place and the 
-        await promise_hightlight(i, "green");               // highlight function will higligh | | |
-                                                            //                                 ^   ^ and that is not what i want.
-        await asyncAwait(i+1);
+            var buffer_x1 = rectArray[rectIndex].x;
+            var buffer_x2 = rectArray[rectIndex+1].x;
+            
+            await promise_swap(rectIndex, buffer_x1, buffer_x2);
+            
+            [rectArray[rectIndex], rectArray[rectIndex+1]] = [rectArray[rectIndex+1], rectArray[rectIndex]]; 
+        }                                                    
+        await promise_hightlight(rectIndex, "green");               
+        await animate(rectIndex+1);
     }
-    
-    
-    
+    else if(rectIndex == lastIndex-1) {
+        console.log("In the async await function i=================================================================" + i);
+        await promise_hightlight(rectIndex, "red");
+        
+        if( rectArray[rectIndex].value > rectArray[rectIndex+1].value ) {
+            await promise_hightlight(rectIndex, "red");
+            
+            isUnsorted = true;
+            console.log("error");
+            var buffer_x1 = rectArray[rectIndex].x;
+            var buffer_x2 = rectArray[rectIndex+1].x;
+            
+            await promise_swap(rectIndex, buffer_x1, buffer_x2);
+            
+            [rectArray[rectIndex], rectArray[rectIndex+1]] = [rectArray[rectIndex+1], rectArray[rectIndex]]; // this I am doing because 
+        }                                                   // after swapping rectArray[i+1] will go to rectArray[i]'s place and the 
+        await promise_hightlight(rectIndex, "green"); 
+        lastIndex -= 1;              // highlight function will higligh | | |
+        rectPointer = 0;
+        
+    }
+     
 }
 
-asyncAwait(0);
+function promise_animate (index) {
+    return new Promise( async (resolve) => {
+        debugger;
+        await animate(index);
+        resolve();  // since asyncAwait function is a asynchronous so we cannot directly resolve() it
+        debugger;
+    })
+}
 
 
+async function asyncAwaitRepeat(index) {
+    if(index < 9) {
 
+        await promise_animate(rectPointer);
+        debugger;
+        if(isUnsorted == true) {
+            isUnsorted = false;
+            await asyncAwaitRepeat(index + 1);
+    
+        }else {
+            promise_hightlight(index, "turquoise")
+        }
+        
+        
+        
 
+    }
+}
 
-
-
-
+asyncAwaitRepeat(asyncAwaitRepeatindex);
 
 
 
